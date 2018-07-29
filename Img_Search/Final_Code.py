@@ -5,8 +5,8 @@ import string
 import json
 import pickle
 import re, string
-#from IPython.core.display import Image
-#from PIL import Image
+from IPython.core.display import Image
+from PIL import Image
 
 from IPython.core.display import display
 
@@ -20,7 +20,7 @@ import mygrad as mg
 import torch
 from torchvision.models import resnet18
 from torchvision import transforms
-#from camera import take_picture
+from camera import take_picture
 from io import StringIO
 import matplotlib.pyplot as plt
 
@@ -63,6 +63,7 @@ def search_phrase(query, annotations, image_id2id, glove, vectors_512, inds_img,
                 nt += word in set(caption.split())
             idf = np.log10(N/nt)
             queries_in_dict.append(glove[word] * idf)
+    print("Got the idf")
 
     final_embedding = np.mean(np.vstack(queries_in_dict), axis = 0)
     # Find the cosine distance between the 50D vectors and the embeddings
@@ -73,11 +74,17 @@ def search_phrase(query, annotations, image_id2id, glove, vectors_512, inds_img,
     vectors_50 = mg.matmul(vectors_512, weight) + bias
     #print(vectors_50[:k])
     #print(vectors_50[21697])
-    vectors_50 = vectors_50/np.linalg.norm(vectors_50)
+    print("shape1", vectors_50.shape)
+    x = np.arange(10).reshape(5,2)
+    print(np.sum(x, axis = 1))
+    a = vectors_50 **2
+    sum_s = a.sum(axis = 1)
+    vectors_50 = vectors_50/mg.sqrt(sum_s).reshape(vectors_50.shape[0], 1)
+    print("Got sum 1", vectors_50.shape)
     #s = np.sum(final_embedding)
-    final_embedding = final_embedding/np.linalg.norm(final_embedding)
-
-    cos = np.dot(vectors_50, final_embedding)
+    final_embedding = final_embedding/np.sqrt(np.sum(final_embedding ** 2))
+    print("Printing images")
+    cos = np.dot(vectors_50.data, final_embedding)
     k = 4
     max_vals = np.argsort(cos)[-k:]
 
@@ -88,7 +95,7 @@ def search_phrase(query, annotations, image_id2id, glove, vectors_512, inds_img,
         img = get_image(url)
         ax[ind // 2, ind % 2].imshow(img)
 
-'''def search_image(annotations, image_id2id, glove, vectors_512, inds_img, weight, bias, loaded_file):
+def search_image(annotations, image_id2id, glove, vectors_512, inds_img, weight, bias, loaded_file):
 
     class IdentityModule(torch.nn.Module):
         def forward(self, inputs):
@@ -106,11 +113,13 @@ def search_phrase(query, annotations, image_id2id, glove, vectors_512, inds_img,
     img = new_IMG.fromarray(take_picture())
     processed_img = preprocess(img)[np.newaxis]
     feats = model(processed_img)
-    vectors_512_copy = vectors_512.copy()
+    print(type(vectors_512[0]))
+    vectors_512_copy = np.copy(vectors_512.data)
+    vectors_512_copy = vectors_512_copy
     vectors_512_copy /= np.sqrt(np.sum(vectors_512_copy**2))
-    feat = feats.numpy()
+    feat = feats.detach().numpy()
     feat /= np.sqrt(np.sum(feat**2))
-    cos = np.dot(vectors_512_copy, feat)
+    cos = np.dot(vectors_512_copy, feat[0])
     k = 4
     max_vals = np.argsort(cos)[-k:]
     fig, ax = plt.subplots(2,2)
@@ -118,4 +127,4 @@ def search_phrase(query, annotations, image_id2id, glove, vectors_512, inds_img,
         
         url = loaded_file["images"][image_id2id[ima]]['coco_url']
         img = get_image(url)
-        ax[ind // 2, ind % 2].imshow(img)'''
+        ax[ind // 2, ind % 2].imshow(img)

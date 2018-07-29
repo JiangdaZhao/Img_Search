@@ -5,7 +5,7 @@ from gensim.models.keyedvectors import KeyedVectors
 import string
 import json
 import pickle
-import Final_Code
+from Img_Search import Final_Code
 
 #from IPython.core.display import Image
 #from PIL import Image
@@ -51,9 +51,8 @@ inds_img = np.array(inds_img)
 vectors_512 = np.vstack(vectors_512)
 image_id2id = {}
 
-b = np.load(file_path/"Our_trained_model.npz")
-weight = b['weight']
-bias = b['bias']
+weight = np.load(file_path/"weight.npy")
+bias = np.load(file_path/"bias.npy")
 
 for i in range(len(loaded_file["images"])):
     image_id2id[loaded_file["images"][i]['id']] = i
@@ -63,8 +62,7 @@ def phrase_search(phrase):
     Final_Code.search_phrase(phrase, annotations, image_id2id, glove, vectors_512, inds_img, weight, bias, loaded_file)
     return
 
-'''def image_search():
+def image_search():
     Final_Code.search_image(annotations, image_id2id, glove, vectors_512, inds_img, weight, bias, loaded_file)
-    return'''
+    return
 
-phrase_search("cat")
