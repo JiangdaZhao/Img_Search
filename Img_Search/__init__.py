@@ -66,3 +66,5 @@ def image_search():
     Final_Code.search_image(annotations, image_id2id, glove, vectors_512, inds_img, weight, bias, loaded_file)
     return
 
+
+
